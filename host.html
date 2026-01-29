@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>진행자 대시보드 - 동물 초성 빙고</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 방 생성 화면 -->
+    <div id="createRoomScreen" class="container">
+        <div class="card">
+            <div class="header-icon">
+                <div class="icon-wrapper gradient-pink">
+                    <span style="font-size: 3rem;">🦊</span>
+                </div>
+            </div>
+            <h2 class="subtitle">방 개설</h2>
+            <p style="text-align: center; color: #cbd5e1; font-size: 0.875rem; margin-bottom: 2rem;">
+                게임 설정을 선택하고 방을 개설하세요
+            </p>
+
+            <div class="input-group">
+                <label class="input-label">
+                    <span>👥</span>
+                    <span>참가 팀 수</span>
+                </label>
+                <input 
+                    type="number" 
+                    id="teamCountInput" 
+                    class="input-field" 
+                    placeholder="참가할 팀 수를 입력하세요"
+                    min="1"
+                    max="20"
+                    value="4"
+                    style="text-align: center; font-size: 1.5rem;"
+                >
+                <p style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.5rem;">
+                    권장: 2~10팀
+                </p>
+            </div>
+
+            <button class="btn btn-primary" onclick="createRoom()">
+                <span>🚀</span>
+                <span>방 개설하기</span>
+            </button>
+
+            <button class="btn btn-ghost" onclick="location.href='index.html'">
+                <span>🏠</span>
+                <span>메인으로 돌아가기</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 대시보드 -->
+    <div id="dashboardScreen" class="container" style="display: none;">
+        <div class="dashboard">
+            <div class="dashboard-header">
+                <div class="dashboard-title">
+                    <span style="font-size: 2rem;">🦊</span>
+                    <div>
+                        <h2>진행자 대시보드</h2>
+                        <p>게임 진행 중 (<span id="maxTeams">0</span>팀 참가 가능)</p>
+                    </div>
+                </div>
+                <div class="dashboard-actions">
+                    <div class="game-code-badge">
+                        <span>게임코드: <span id="gameCode">------</span></span>
+                    </div>
+                    <button class="btn btn-ghost" onclick="endGameAndGoHome()" style="width: auto; padding: 0.5rem 1rem;">
+                        종료
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-2" style="align-items: start;">
+                <!-- 왼쪽 영역 -->
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <!-- 게임 상태 -->
+                    <div class="section">
+                        <div class="section-header">
+                            <span>🎮</span>
+                            <span>게임 상태</span>
+                        </div>
+                        <div class="grid grid-3" style="margin-bottom: 1rem;">
+                            <div class="stat-card">
+                                <div class="stat-value" style="color: #06b6d4;" id="currentRound">0</div>
+                                <div class="stat-label">현재 라운드</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" style="color: #3b82f6;" id="playerCount">0</div>
+                                <div class="stat-label">참가자 수</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" style="color: #a855f7;" id="submissionCount">0</div>
+                                <div class="stat-label">제출 팀</div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button id="startBtn" class="btn btn-primary" onclick="startRound()" style="flex: 1; display: none;">
+                                <span>▶️</span>
+                                <span>게임 시작</span>
+                            </button>
+                            <button id="revealBtn" class="btn" onclick="revealAnswers()" style="flex: 1; display: none; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+                                <span>🎯</span>
+                                <span>정답 발표</span>
+                            </button>
+                            <button id="nextBtn" class="btn btn-secondary" onclick="nextRound()" style="flex: 1; display: none;">
+                                <span>⏭️</span>
+                                <span>다음 라운드</span>
+                            </button>
+                            <button class="btn" onclick="endGame()" style="flex: 1; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white;">
+                                <span>❌</span>
+                                <span>게임 종료</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 라운드 관리 -->
+                    <div class="section">
+                        <div class="section-header">
+                            <span>📝</span>
+                            <span>라운드 관리</span>
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="font-size: 0.875rem; color: #94a3b8; margin-bottom: 0.5rem; display: block;">초성 선택</label>
+                            <div class="choseong-grid" id="choseongGrid">
+                                <!-- JavaScript로 생성 -->
+                            </div>
+                        </div>
+
+                        <div id="selectedInfo" style="display: none; background: rgba(15, 23, 42, 0.5); border-radius: 0.75rem; padding: 1rem; border: 1px solid rgba(148, 163, 184, 0.2); margin-bottom: 1rem;">
+                            <div style="font-size: 0.875rem; color: #fbbf24; margin-bottom: 0.5rem;">
+                                선택된 초성: <span id="selectedChoseong"></span>
+                            </div>
+                            <div style="font-size: 0.875rem; color: #94a3b8;">
+                                힌트: <span id="selectedHint"></span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label style="font-size: 0.875rem; color: #94a3b8; margin-bottom: 0.5rem; display: block;">답변 시간 설정</label>
+                            <div class="slider-container">
+                                <input type="range" id="timeLimitSlider" class="slider" min="30" max="300" step="10" value="200">
+                                <span class="slider-value"><span id="timeLimitValue">200</span>초</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 제출 현황 -->
+                    <div class="section" id="submissionSection" style="display: none;">
+                        <div class="section-header">
+                            <span>📊</span>
+                            <span>실시간 제출 현황</span>
+                        </div>
+                        <div id="submissionList" class="submission-list">
+                            <div class="empty-state">
+                                아직 제출된 답변이 없습니다.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 오른쪽 영역 -->
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <!-- 팀 현황 -->
+                    <div class="section">
+                        <div class="section-header">
+                            <span>👥</span>
+                            <span>팀 현황</span>
+                        </div>
+                        <div id="playerList" class="player-list">
+                            <div class="empty-state">
+                                참가자를 기다리는 중...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 실시간 참가자 -->
+                    <div class="section">
+                        <div class="section-header">
+                            <span>🔴</span>
+                            <span>실시간 참가자</span>
+                        </div>
+                        <div id="onlineList" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <div class="empty-state">
+                                접속 중인 참가자가 없습니다.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 정답 발표 모달 -->
+    <div id="answerModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 2rem; padding: 2rem; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; border: 1px solid rgba(148, 163, 184, 0.2);">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">🎯</div>
+                <h2 style="font-size: 2rem; font-weight: 700; color: white; margin-bottom: 0.5rem;">정답 발표</h2>
+                <p style="color: #94a3b8; font-size: 0.875rem;">초성: <span id="modalChoseong" style="color: #06b6d4; font-weight: 600;"></span></p>
+            </div>
+
+            <div id="modalAnswerList" style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 2rem;">
+                <!-- JavaScript로 생성 -->
+            </div>
+
+            <button onclick="closeAnswerModal()" class="btn btn-primary" style="width: 100%;">
+                <span>확인</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 게임 종료 모달 -->
+    <div id="finishModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 1000; align-items: center; justify-content: center; overflow-y: auto; padding: 2rem;">
+        <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 2rem; padding: 3rem; max-width: 900px; width: 100%; border: 1px solid rgba(148, 163, 184, 0.2);">
+            <div style="text-align: center; margin-bottom: 3rem;">
+                <div style="font-size: 5rem; margin-bottom: 1rem; animation: bounce 1s infinite;">🎉</div>
+                <h2 style="font-size: 3rem; font-weight: 800; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.5rem;">
+                    게임 종료!
+                </h2>
+                <p style="color: #cbd5e1; font-size: 1.125rem;">최종 순위가 발표되었습니다</p>
+            </div>
+
+            <!-- 시상대 -->
+            <div id="hostPodium" style="display: flex; align-items: flex-end; justify-content: center; gap: 1rem; margin-bottom: 3rem; min-height: 300px;">
+                <!-- JavaScript로 생성 -->
+            </div>
+
+            <!-- 전체 순위 -->
+            <div style="background: rgba(15, 23, 42, 0.5); border-radius: 1.5rem; padding: 2rem; border: 1px solid rgba(148, 163, 184, 0.2); margin-bottom: 2rem;">
+                <h3 style="font-size: 1.5rem; font-weight: 700; color: white; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                    <span>🏆</span>
+                    <span>전체 순위</span>
+                </h3>
+                <div id="hostFullRanking" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <!-- JavaScript로 생성 -->
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem;">
+                <button onclick="closeFinishModal()" class="btn btn-secondary" style="flex: 1;">
+                    <span>닫기</span>
+                </button>
+                <button onclick="goHomeFromFinish()" class="btn btn-primary" style="flex: 1;">
+                    <span>🏠</span>
+                    <span>메인으로</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(251, 191, 36, 0.8); }
+        }
+
+        .podium-place {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .podium-1 { animation-delay: 0.3s; order: 2; }
+        .podium-2 { animation-delay: 0.1s; order: 1; }
+        .podium-3 { animation-delay: 0.2s; order: 3; }
+
+        .medal {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: bounce 2s infinite;
+        }
+
+        .podium-block {
+            width: 150px;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
+            border-radius: 1rem 1rem 0 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem 1rem;
+            border: 2px solid;
+            position: relative;
+        }
+
+        .podium-1 .podium-block {
+            height: 200px;
+            border-color: #fbbf24;
+            animation: glow 2s infinite;
+        }
+
+        .podium-2 .podium-block {
+            height: 150px;
+            border-color: #94a3b8;
+        }
+
+        .podium-3 .podium-block {
+            height: 120px;
+            border-color: #cd7f32;
+        }
+
+        .rank-badge {
+            position: absolute;
+            top: -1rem;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.25rem;
+            border: 3px solid;
+        }
+
+        .rank-1 {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border-color: #fbbf24;
+            color: white;
+        }
+
+        .rank-2 {
+            background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+            border-color: #94a3b8;
+            color: white;
+        }
+
+        .rank-3 {
+            background: linear-gradient(135deg, #cd7f32 0%, #b86930 100%);
+            border-color: #cd7f32;
+            color: white;
+        }
+
+        @media (max-width: 640px) {
+            .podium-block {
+                width: 100px;
+                padding: 1rem 0.5rem;
+            }
+
+            .podium-1 .podium-block { height: 150px; }
+            .podium-2 .podium-block { height: 110px; }
+            .podium-3 .podium-block { height: 90px; }
+
+            .medal { font-size: 3rem; }
+        }
+    </style>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCCuAOnkEmfFEE57D3bgWLU7xR2f0i2psI",
+            authDomain: "animal-bingo-90774.firebaseapp.com",
+            databaseURL: "https://animal-bingo-90774-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "animal-bingo-90774",
+            storageBucket: "animal-bingo-90774.firebasestorage.app",
+            messagingSenderId: "547100283990",
+            appId: "1:547100283990:web:d1206d278a9f46eaf2d7f7",
+            measurementId: "G-E8WLHPJ24E"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        const choseongList = ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
+        let gameCode = '';
+        let currentChoseong = '';
+        let timeLimit = 200;
+        let timerInterval = null;
+        let answersData = {};
+        let maxTeams = 0;
+
+        // 방 생성
+        function createRoom() {
+            console.log('방 개설 버튼 클릭됨');
+            
+            const teamCount = parseInt(document.getElementById('teamCountInput').value);
+            console.log('입력된 팀 수:', teamCount);
+            
+            if (!teamCount || teamCount < 1) {
+                alert('참가 팀 수를 입력해주세요. (최소 1팀)');
+                return;
+            }
+
+            if (teamCount > 20) {
+                alert('참가 팀 수는 최대 20팀까지 가능합니다.');
+                return;
+            }
+
+            maxTeams = teamCount;
+            console.log('게임 초기화 시작...');
+            
+            try {
+                initializeGame();
+                console.log('게임 초기화 완료');
+
+                // 화면 전환
+                document.getElementById('createRoomScreen').style.display = 'none';
+                document.getElementById('dashboardScreen').style.display = 'block';
+            } catch (error) {
+                console.error('게임 초기화 오류:', error);
+                alert('게임 생성 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        // 게임 초기화
+        function initializeGame() {
+            gameCode = Math.floor(100000 + Math.random() * 900000).toString();
+            document.getElementById('gameCode').textContent = gameCode;
+            document.getElementById('maxTeams').textContent = maxTeams;
+
+            database.ref(`games/${gameCode}`).set({
+                status: 'waiting',
+                currentRound: 0,
+                selectedChoseong: '',
+                timeLimit: 200,
+                timer: 0,
+                maxTeams: maxTeams,
+                createdAt: Date.now()
+            });
+
+            // 게임 상태 리스너
+            setupGameListeners();
+            
+            // 정답 데이터 로드
+            loadAnswersData();
+
+            // 초성 버튼 생성
+            createChoseongButtons();
+
+            // 시작 버튼 표시
+            document.getElementById('startBtn').style.display = 'flex';
+        }
+
+        // 정답 데이터 로드
+        function loadAnswersData() {
+            database.ref('answers').on('value', (snapshot) => {
+                answersData = snapshot.val() || {};
+                updateChoseongButtons();
+            });
+        }
+
+        // 초성 버튼 생성
+        function createChoseongButtons() {
+            const grid = document.getElementById('choseongGrid');
+            grid.innerHTML = '';
+            
+            choseongList.forEach(ch => {
+                const btn = document.createElement('button');
+                btn.className = 'choseong-btn';
+                btn.textContent = ch;
+                btn.id = `choseong-${ch}`;
+                btn.onclick = () => selectChoseong(ch);
+                grid.appendChild(btn);
+            });
+        }
+
+        // 초성 버튼 업데이트
+        function updateChoseongButtons() {
+            choseongList.forEach(ch => {
+                const btn = document.getElementById(`choseong-${ch}`);
+                if (btn) {
+                    const hasData = answersData[ch] && answersData[ch].answers && answersData[ch].answers.length > 0;
+                    btn.disabled = !hasData;
+                }
+            });
+        }
+
+        // 초성 선택
+        function selectChoseong(ch) {
+            if (!answersData[ch] || !answersData[ch].answers || answersData[ch].answers.length === 0) {
+                alert('해당 초성에 등록된 정답이 없습니다.');
+                return;
+            }
+
+            currentChoseong = ch;
+            
+            document.querySelectorAll('.choseong-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`choseong-${ch}`).classList.add('active');
+
+            document.getElementById('selectedInfo').style.display = 'block';
+            document.getElementById('selectedChoseong').textContent = ch;
+            document.getElementById('selectedHint').textContent = answersData[ch].hint || '없음';
+        }
+
+        // 게임 시작
+        function startRound() {
+            if (!currentChoseong) {
+                alert('초성을 먼저 선택해주세요.');
+                return;
+            }
+
+            database.ref(`games/${gameCode}`).update({
+                status: 'playing',
+                currentRound: 1,
+                selectedChoseong: currentChoseong,
+                timeLimit: timeLimit,
+                timer: timeLimit,
+                startTime: Date.now(),
+                revealed: false
+            });
+
+            // 제출 목록 초기화
+            database.ref(`games/${gameCode}/submissions`).set({});
+
+            startTimer();
+
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('revealBtn').style.display = 'flex';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('submissionSection').style.display = 'block';
+        }
+
+        // 정답 발표
+        function revealAnswers() {
+            if (!confirm('정답을 발표하시겠습니까? 점수가 확정됩니다.')) {
+                return;
+            }
+
+            // 제출된 답변들의 점수를 실제 플레이어 점수에 반영
+            database.ref(`games/${gameCode}/submissions`).once('value', (snapshot) => {
+                const submissions = snapshot.val() || {};
+                
+                Object.values(submissions).forEach(sub => {
+                    database.ref(`games/${gameCode}/players/${sub.playerId}`).once('value', (playerSnapshot) => {
+                        const playerData = playerSnapshot.val();
+                        if (playerData) {
+                            database.ref(`games/${gameCode}/players/${sub.playerId}`).update({
+                                score: (playerData.score || 0) + sub.points
+                            });
+                        }
+                    });
+                });
+
+                // 정답 발표 상태로 변경
+                database.ref(`games/${gameCode}`).update({
+                    revealed: true
+                });
+
+                // 정답 모달 표시
+                showAnswerModal();
+
+                document.getElementById('revealBtn').style.display = 'none';
+                document.getElementById('nextBtn').style.display = 'flex';
+            });
+        }
+
+        // 정답 모달 표시
+        function showAnswerModal() {
+            const modal = document.getElementById('answerModal');
+            const modalChoseong = document.getElementById('modalChoseong');
+            const modalAnswerList = document.getElementById('modalAnswerList');
+
+            database.ref(`games/${gameCode}`).once('value', (snapshot) => {
+                const gameData = snapshot.val();
+                const choseong = gameData.selectedChoseong;
+
+                modalChoseong.textContent = choseong;
+
+                // 정답 리스트 표시
+                const answers = answersData[choseong]?.answers || [];
+                modalAnswerList.innerHTML = answers.map((answer, index) => {
+                    const points = answer.length * 100;
+                    return `
+                        <div style="background: rgba(15, 23, 42, 0.5); border-radius: 0.75rem; padding: 1rem; border: 1px solid rgba(148, 163, 184, 0.2); display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div style="width: 2rem; height: 2rem; border-radius: 50%; background: rgba(6, 182, 212, 0.2); display: flex; align-items: center; justify-content: center; color: #06b6d4; font-weight: 700; font-size: 0.875rem;">
+                                    ${index + 1}
+                                </div>
+                                <span style="font-size: 1.125rem; font-weight: 600; color: white;">${answer}</span>
+                            </div>
+                            <span style="color: #10b981; font-weight: 600;">${points}점</span>
+                        </div>
+                    `;
+                }).join('');
+
+                modal.style.display = 'flex';
+            });
+        }
+
+        // 정답 모달 닫기
+        function closeAnswerModal() {
+            document.getElementById('answerModal').style.display = 'none';
+        }
+
+        // 다음 라운드
+        function nextRound() {
+            if (!currentChoseong) {
+                alert('초성을 먼저 선택해주세요.');
+                return;
+            }
+
+            database.ref(`games/${gameCode}`).once('value', (snapshot) => {
+                const data = snapshot.val();
+                const currentRound = data.currentRound || 0;
+
+                database.ref(`games/${gameCode}`).update({
+                    status: 'playing',
+                    currentRound: currentRound + 1,
+                    selectedChoseong: currentChoseong,
+                    timeLimit: timeLimit,
+                    timer: timeLimit,
+                    startTime: Date.now(),
+                    revealed: false
+                });
+
+                // 제출 목록 초기화
+                database.ref(`games/${gameCode}/submissions`).set({});
+
+                // 초성 선택 초기화
+                currentChoseong = '';
+                document.querySelectorAll('.choseong-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.getElementById('selectedInfo').style.display = 'none';
+
+                document.getElementById('nextBtn').style.display = 'none';
+                document.getElementById('revealBtn').style.display = 'flex';
+
+                startTimer();
+            });
+        }
+
+        // 게임 종료
+        function endGame() {
+            if (!confirm('게임을 종료하시겠습니까?')) {
+                return;
+            }
+
+            database.ref(`games/${gameCode}`).update({
+                status: 'finished'
+            });
+
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+
+            // 최종 순위 모달 표시
+            showFinishModal();
+        }
+
+        // 최종 순위 모달 표시
+        function showFinishModal() {
+            database.ref(`games/${gameCode}/players`).once('value', (snapshot) => {
+                const players = snapshot.val() || {};
+                const playerArray = Object.entries(players).map(([id, data]) => ({
+                    id,
+                    ...data
+                }));
+
+                // 점수순으로 정렬
+                playerArray.sort((a, b) => b.score - a.score);
+
+                // 시상대 렌더링 (1, 2, 3등만)
+                renderHostPodium(playerArray.slice(0, 3));
+
+                // 전체 순위 렌더링
+                renderHostFullRanking(playerArray);
+
+                document.getElementById('finishModal').style.display = 'flex';
+            });
+        }
+
+        // 시상대 렌더링
+        function renderHostPodium(topThree) {
+            const podium = document.getElementById('hostPodium');
+            podium.innerHTML = '';
+
+            const medals = ['🥇', '🥈', '🥉'];
+
+            topThree.forEach((player, index) => {
+                const place = document.createElement('div');
+                place.className = `podium-place podium-${index + 1}`;
+                
+                place.innerHTML = `
+                    <div class="medal">${medals[index]}</div>
+                    <div class="podium-block">
+                        <div class="rank-badge rank-${index + 1}">${index + 1}</div>
+                        <div style="font-size: 1.125rem; font-weight: 700; color: white; margin-bottom: 0.5rem;">${player.name}</div>
+                        <div style="font-size: 1.75rem; font-weight: 800; color: ${index === 0 ? '#fbbf24' : index === 1 ? '#94a3b8' : '#cd7f32'};">
+                            ${player.score}점
+                        </div>
+                    </div>
+                `;
+                podium.appendChild(place);
+            });
+        }
+
+        // 전체 순위 렌더링
+        function renderHostFullRanking(players) {
+            const fullRanking = document.getElementById('hostFullRanking');
+            fullRanking.innerHTML = '';
+
+            players.forEach((player, index) => {
+                const rankColor = index === 0 ? '#fbbf24' : index === 1 ? '#94a3b8' : index === 2 ? '#cd7f32' : '#64748b';
+                
+                const rankItem = document.createElement('div');
+                rankItem.style.cssText = `
+                    background: rgba(15, 23, 42, 0.5);
+                    border-radius: 0.75rem;
+                    padding: 1rem;
+                    border: 1px solid rgba(148, 163, 184, 0.2);
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                `;
+                
+                rankItem.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 2.5rem; height: 2.5rem; border-radius: 50%; background: ${rankColor}; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 1.125rem;">
+                            ${index + 1}
+                        </div>
+                        <div style="font-size: 1.125rem; font-weight: 600; color: white;">
+                            ${player.name}
+                        </div>
+                    </div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: ${rankColor};">
+                        ${player.score}점
+                    </div>
+                `;
+                
+                fullRanking.appendChild(rankItem);
+            });
+        }
+
+        // 모달 닫기
+        function closeFinishModal() {
+            document.getElementById('finishModal').style.display = 'none';
+        }
+
+        // 메인으로
+        function goHomeFromFinish() {
+            location.href = 'index.html';
+        }
+
+        // 게임 종료 후 홈으로
+        function endGameAndGoHome() {
+            if (confirm('게임을 종료하고 메인으로 돌아가시겠습니까?')) {
+                database.ref(`games/${gameCode}`).update({
+                    status: 'finished'
+                });
+
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                }
+
+                location.href = 'index.html';
+            }
+        }
+
+        // 타이머 시작
+        function startTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+
+            timerInterval = setInterval(() => {
+                database.ref(`games/${gameCode}`).once('value', (snapshot) => {
+                    const data = snapshot.val();
+
+                    if (data && data.timer > 0) {
+                        database.ref(`games/${gameCode}`).update({
+                            timer: data.timer - 1
+                        });
+                    } else {
+                        clearInterval(timerInterval);
+                    }
+                });
+            }, 1000);
+        }
+
+        // 게임 상태 리스너
+        function setupGameListeners() {
+            // 게임 상태
+            database.ref(`games/${gameCode}`).on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    document.getElementById('currentRound').textContent = data.currentRound || 0;
+                }
+            });
+
+            // 플레이어 목록
+            database.ref(`games/${gameCode}/players`).on('value', (snapshot) => {
+                const players = snapshot.val() || {};
+                const playerArray = Object.entries(players).map(([id, data]) => ({
+                    id,
+                    ...data
+                }));
+
+                document.getElementById('playerCount').textContent = playerArray.length;
+
+                const playerList = document.getElementById('playerList');
+                const onlineList = document.getElementById('onlineList');
+
+                if (playerArray.length === 0) {
+                    playerList.innerHTML = '<div class="empty-state">참가자를 기다리는 중...</div>';
+                    onlineList.innerHTML = '<div class="empty-state">접속 중인 참가자가 없습니다.</div>';
+                } else {
+                    playerList.innerHTML = playerArray.map((player, index) => `
+                        <div class="player-item">
+                            <div class="player-info">
+                                <div class="player-number">${index + 1}</div>
+                                <span class="player-name">${player.name}</span>
+                            </div>
+                            <span class="player-score">${player.score || 0}점</span>
+                        </div>
+                    `).join('');
+
+                    onlineList.innerHTML = playerArray.map(player => `
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div class="status-dot"></div>
+                            <span style="font-size: 0.875rem; color: #cbd5e1;">${player.name} 접속 중</span>
+                        </div>
+                    `).join('');
+                }
+            });
+
+            // 제출 목록
+            database.ref(`games/${gameCode}/submissions`).on('value', (snapshot) => {
+                const submissions = snapshot.val() || {};
+                const submissionArray = Object.entries(submissions).map(([id, data]) => ({
+                    id,
+                    ...data
+                }));
+
+                document.getElementById('submissionCount').textContent = submissionArray.length;
+
+                const submissionList = document.getElementById('submissionList');
+                if (submissionArray.length === 0) {
+                    submissionList.innerHTML = '<div class="empty-state">아직 제출된 답변이 없습니다.</div>';
+                } else {
+                    submissionList.innerHTML = submissionArray.map((sub, index) => `
+                        <div class="submission-item">
+                            <div class="submission-info">
+                                <div class="submission-rank">${index + 1}</div>
+                                <div class="submission-details">
+                                    <div class="submission-name">${sub.playerName}</div>
+                                    <div class="submission-answer" style="color: #10b981;">✅ 제출 완료</div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            });
+        }
+
+        // 시간 제한 슬라이더
+        document.getElementById('timeLimitSlider').addEventListener('input', (e) => {
+            timeLimit = parseInt(e.target.value);
+            document.getElementById('timeLimitValue').textContent = timeLimit;
+        });
+    </script>
+</body>
+</html>

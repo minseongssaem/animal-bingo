@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>진행자 메뉴 - 동물 초성 빙고</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header-icon">
+                <div class="icon-wrapper gradient-pink">
+                    <span style="font-size: 3rem;">🦊</span>
+                </div>
+            </div>
+            <h2 class="subtitle">진행자 메뉴</h2>
+            <p style="text-align: center; color: #cbd5e1; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                환영합니다, <span id="userName" style="color: #06b6d4; font-weight: 600;"></span>님!
+            </p>
+            <p style="text-align: center; color: #94a3b8; font-size: 0.75rem; margin-bottom: 2rem;">
+                원하시는 메뉴를 선택하세요
+            </p>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="location.href='host.html'">
+                    <span>🎮</span>
+                    <span>게임 진행하기</span>
+                </button>
+
+                <button class="btn btn-secondary" onclick="location.href='answers.html'">
+                    <span>⚙️</span>
+                    <span>정답 관리</span>
+                </button>
+            </div>
+
+            <button class="btn btn-ghost" onclick="logout()">
+                <span>🚪</span>
+                <span>로그아웃</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 로그인 확인
+        const username = sessionStorage.getItem('username');
+        const name = sessionStorage.getItem('name');
+
+        if (!username) {
+            alert('로그인이 필요합니다.');
+            location.href = 'login.html';
+        }
+
+        document.getElementById('userName').textContent = name || username;
+
+        // 로그아웃
+        function logout() {
+            if (confirm('로그아웃 하시겠습니까?')) {
+                sessionStorage.clear();
+                location.href = 'index.html';
+            }
+        }
+    </script>
+</body>
+</html>

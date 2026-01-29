@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>정답 관리 - 동물 초성 빙고</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard">
+            <div class="card">
+                <div class="dashboard-header">
+                    <div class="dashboard-title">
+                        <span style="font-size: 2rem;">⚙️</span>
+                        <div>
+                            <h2>정답 관리</h2>
+                            <p>초성별 정답과 힌트를 등록하세요</p>
+                        </div>
+                    </div>
+                    <div class="dashboard-actions">
+                        <button class="btn btn-ghost" onclick="location.href='host-menu.html'">
+                            <span>❌</span>
+                            <span>닫기</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="section" style="margin-bottom: 1.5rem;">
+                    <div class="section-header">
+                        <span>📝</span>
+                        <span>초성 선택</span>
+                    </div>
+                    <div class="choseong-grid" id="choseongGrid">
+                        <!-- JavaScript로 생성 -->
+                    </div>
+                </div>
+
+                <div class="section" style="margin-bottom: 1.5rem;">
+                    <div class="section-header">
+                        <span>💡</span>
+                        <span>힌트 설정</span>
+                    </div>
+                    <input 
+                        type="text" 
+                        id="hintInput" 
+                        class="input-field" 
+                        placeholder="예: 1~4글자"
+                    >
+                </div>
+
+                <div class="section" style="margin-bottom: 1.5rem;">
+                    <div class="section-header">
+                        <span>➕</span>
+                        <span>정답 추가</span>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input 
+                            type="text" 
+                            id="answerInput" 
+                            class="input-field" 
+                            placeholder="동물 이름 입력"
+                            style="flex: 1;"
+                        >
+                        <button class="btn btn-primary" onclick="addAnswer()" style="width: auto; padding: 0.875rem 1.5rem;">
+                            <span>➕</span>
+                            <span>추가</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header">
+                        <span>📋</span>
+                        <span>등록된 정답 (<span id="answerCount">0</span>개)</span>
+                    </div>
+                    <div id="answerList" class="player-list">
+                        <div class="empty-state">
+                            <p>등록된 정답이 없습니다.</p>
+                            <p style="font-size: 0.875rem; margin-top: 0.5rem;">위에서 정답을 추가해주세요.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="currentHintDisplay" class="info-badge" style="display: none;">
+                    <div class="info-text">
+                        <span>💡</span>
+                        <span>현재 힌트: <span id="currentHintText"></span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCCuAOnkEmfFEE57D3bgWLU7xR2f0i2psI",
+            authDomain: "animal-bingo-90774.firebaseapp.com",
+            databaseURL: "https://animal-bingo-90774-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "animal-bingo-90774",
+            storageBucket: "animal-bingo-90774.firebasestorage.app",
+            messagingSenderId: "547100283990",
+            appId: "1:547100283990:web:d1206d278a9f46eaf2d7f7",
+            measurementId: "G-E8WLHPJ24E"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // 로그인 확인
+        if (!sessionStorage.getItem('username')) {
+            alert('로그인이 필요합니다.');
+            location.href = 'login.html';
+        }
+
+        const choseongList = ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
+        let currentChoseong = 'ㄱ';
+
+        // 초성 그리드 생성
+        const choseongGrid = document.getElementById('choseongGrid');
+        choseongList.forEach(ch => {
+            const btn = document.createElement('button');
+            btn.className = 'choseong-btn';
+            btn.textContent = ch;
+            btn.onclick = () => selectChoseong(ch);
+            if (ch === currentChoseong) {
+                btn.classList.add('active');
+            }
+            choseongGrid.appendChild(btn);
+        });
+
+        // 초성 선택
+        function selectChoseong(ch) {
+            currentChoseong = ch;
+            
+            // 버튼 활성화 상태 업데이트
+            document.querySelectorAll('.choseong-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent === ch) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // 선택된 초성의 데이터 로드
+            loadAnswers(ch);
+        }
+
+        // 정답 데이터 로드
+        function loadAnswers(ch) {
+            database.ref(`answers/${ch}`).on('value', (snapshot) => {
+                const data = snapshot.val();
+                const answerList = document.getElementById('answerList');
+                const answerCount = document.getElementById('answerCount');
+                const hintInput = document.getElementById('hintInput');
+                const currentHintDisplay = document.getElementById('currentHintDisplay');
+                const currentHintText = document.getElementById('currentHintText');
+
+                if (data && data.answers && data.answers.length > 0) {
+                    answerCount.textContent = data.answers.length;
+                    hintInput.value = data.hint || '';
+                    
+                    if (data.hint) {
+                        currentHintDisplay.style.display = 'block';
+                        currentHintText.textContent = data.hint;
+                    } else {
+                        currentHintDisplay.style.display = 'none';
+                    }
+
+                    answerList.innerHTML = data.answers.map((answer, index) => {
+                        const charCount = answer.length;
+                        const points = charCount * 100;
+                        return `
+                            <div class="answer-item">
+                                <div class="answer-content">
+                                    <div class="answer-number">${index + 1}</div>
+                                    <div class="answer-text-wrapper">
+                                        <span class="answer-word">${answer}</span>
+                                        <span class="answer-info">(${charCount}글자 = ${points}점)</span>
+                                    </div>
+                                </div>
+                                <button class="delete-btn" onclick="deleteAnswer(${index})">
+                                    🗑️
+                                </button>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    answerCount.textContent = '0';
+                    hintInput.value = '';
+                    currentHintDisplay.style.display = 'none';
+                    answerList.innerHTML = `
+                        <div class="empty-state">
+                            <p>등록된 정답이 없습니다.</p>
+                            <p style="font-size: 0.875rem; margin-top: 0.5rem;">위에서 정답을 추가해주세요.</p>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        // 정답 추가
+        function addAnswer() {
+            const answerInput = document.getElementById('answerInput');
+            const hintInput = document.getElementById('hintInput');
+            const answer = answerInput.value.trim();
+            const hint = hintInput.value.trim();
+
+            if (!answer) {
+                alert('정답을 입력해주세요.');
+                return;
+            }
+
+            if (!hint) {
+                alert('힌트를 입력해주세요.');
+                return;
+            }
+
+            database.ref(`answers/${currentChoseong}`).once('value', (snapshot) => {
+                const data = snapshot.val() || { answers: [], hint: '' };
+
+                // 중복 체크
+                if (data.answers && data.answers.includes(answer)) {
+                    alert('이미 등록된 정답입니다.');
+                    return;
+                }
+
+                data.answers.push(answer);
+                data.hint = hint;
+
+                database.ref(`answers/${currentChoseong}`).set(data).then(() => {
+                    answerInput.value = '';
+                    alert('정답이 추가되었습니다.');
+                }).catch((error) => {
+                    console.error('정답 추가 오류:', error);
+                    alert('정답 추가에 실패했습니다.');
+                });
+            });
+        }
+
+        // 정답 삭제
+        function deleteAnswer(index) {
+            if (!confirm('이 정답을 삭제하시겠습니까?')) {
+                return;
+            }
+
+            database.ref(`answers/${currentChoseong}`).once('value', (snapshot) => {
+                const data = snapshot.val();
+
+                if (data && data.answers) {
+                    data.answers.splice(index, 1);
+                    database.ref(`answers/${currentChoseong}`).set(data).then(() => {
+                        alert('정답이 삭제되었습니다.');
+                    }).catch((error) => {
+                        console.error('정답 삭제 오류:', error);
+                        alert('정답 삭제에 실패했습니다.');
+                    });
+                }
+            });
+        }
+
+        // Enter 키로 정답 추가
+        document.getElementById('answerInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addAnswer();
+            }
+        });
+
+        // 초기 로드
+        loadAnswers(currentChoseong);
+    </script>
+</body>
+</html>

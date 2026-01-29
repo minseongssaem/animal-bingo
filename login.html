@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인 - 동물 초성 빙고</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header-icon">
+                <div class="icon-wrapper gradient-pink">
+                    <span style="font-size: 3rem;">🦊</span>
+                </div>
+            </div>
+            <h2 class="subtitle">진행자 로그인</h2>
+            <p style="text-align: center; color: #cbd5e1; font-size: 0.875rem; margin-bottom: 2rem;">
+                승인된 계정으로 로그인하세요
+            </p>
+
+            <div class="input-group">
+                <label class="input-label">
+                    <span>👤</span>
+                    <span>아이디</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    class="input-field" 
+                    placeholder="아이디"
+                >
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">
+                    <span>🔒</span>
+                    <span>비밀번호</span>
+                </label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    class="input-field" 
+                    placeholder="비밀번호"
+                >
+            </div>
+
+            <button class="btn btn-primary" onclick="login()">
+                <span>🔓</span>
+                <span>로그인</span>
+            </button>
+
+            <button class="btn btn-secondary" onclick="location.href='register.html'">
+                <span>📝</span>
+                <span>회원가입</span>
+            </button>
+
+            <button class="btn btn-ghost" onclick="location.href='index.html'">
+                <span>🏠</span>
+                <span>메인으로 돌아가기</span>
+            </button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCCuAOnkEmfFEE57D3bgWLU7xR2f0i2psI",
+            authDomain: "animal-bingo-90774.firebaseapp.com",
+            databaseURL: "https://animal-bingo-90774-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "animal-bingo-90774",
+            storageBucket: "animal-bingo-90774.firebasestorage.app",
+            messagingSenderId: "547100283990",
+            appId: "1:547100283990:web:d1206d278a9f46eaf2d7f7",
+            measurementId: "G-E8WLHPJ24E"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // 로그인
+        function login() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            if (!username || !password) {
+                alert('아이디와 비밀번호를 입력해주세요.');
+                return;
+            }
+
+            // 사용자 확인
+            database.ref('users').orderByChild('username').equalTo(username).once('value', (snapshot) => {
+                const users = snapshot.val();
+
+                if (!users) {
+                    alert('존재하지 않는 아이디입니다.');
+                    return;
+                }
+
+                const userId = Object.keys(users)[0];
+                const user = users[userId];
+
+                if (user.password !== password) {
+                    alert('비밀번호가 일치하지 않습니다.');
+                    return;
+                }
+
+                if (user.status !== 'approved') {
+                    alert('아직 승인 대기 중입니다.\n관리자의 승인을 기다려주세요.');
+                    return;
+                }
+
+                // 로그인 성공
+                sessionStorage.setItem('userId', userId);
+                sessionStorage.setItem('username', user.username);
+                sessionStorage.setItem('name', user.name);
+                location.href = 'host-menu.html';
+            });
+        }
+
+        // Enter 키 이벤트
+        document.getElementById('username').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('password').focus();
+            }
+        });
+
+        document.getElementById('password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                login();
+            }
+        });
+    </script>
+</body>
+</html>

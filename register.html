@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 - 동물 초성 빙고</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header-icon">
+                <div class="icon-wrapper gradient-pink">
+                    <span style="font-size: 3rem;">📝</span>
+                </div>
+            </div>
+            <h2 class="subtitle">회원가입</h2>
+            <p style="text-align: center; color: #cbd5e1; font-size: 0.875rem; margin-bottom: 2rem;">
+                진행자 계정을 신청하세요
+            </p>
+
+            <div class="input-group">
+                <label class="input-label">
+                    <span>👤</span>
+                    <span>아이디</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    class="input-field" 
+                    placeholder="아이디 (4~20자)"
+                >
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">
+                    <span>🔒</span>
+                    <span>비밀번호</span>
+                </label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    class="input-field" 
+                    placeholder="비밀번호 (6자 이상)"
+                >
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">
+                    <span>🔒</span>
+                    <span>비밀번호 확인</span>
+                </label>
+                <input 
+                    type="password" 
+                    id="passwordConfirm" 
+                    class="input-field" 
+                    placeholder="비밀번호 확인"
+                >
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">
+                    <span>✏️</span>
+                    <span>이름</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="name" 
+                    class="input-field" 
+                    placeholder="이름"
+                >
+            </div>
+
+            <button class="btn btn-primary" onclick="register()">
+                <span>✅</span>
+                <span>가입 신청</span>
+            </button>
+
+            <button class="btn btn-secondary" onclick="location.href='login.html'">
+                <span>🔓</span>
+                <span>로그인 화면으로</span>
+            </button>
+
+            <button class="btn btn-ghost" onclick="location.href='index.html'">
+                <span>🏠</span>
+                <span>메인으로 돌아가기</span>
+            </button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCCuAOnkEmfFEE57D3bgWLU7xR2f0i2psI",
+            authDomain: "animal-bingo-90774.firebaseapp.com",
+            databaseURL: "https://animal-bingo-90774-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "animal-bingo-90774",
+            storageBucket: "animal-bingo-90774.firebasestorage.app",
+            messagingSenderId: "547100283990",
+            appId: "1:547100283990:web:d1206d278a9f46eaf2d7f7",
+            measurementId: "G-E8WLHPJ24E"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // 회원가입
+        function register() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const passwordConfirm = document.getElementById('passwordConfirm').value.trim();
+            const name = document.getElementById('name').value.trim();
+
+            // 유효성 검사
+            if (!username || !password || !passwordConfirm || !name) {
+                alert('모든 항목을 입력해주세요.');
+                return;
+            }
+
+            if (username.length < 4 || username.length > 20) {
+                alert('아이디는 4~20자 사이여야 합니다.');
+                return;
+            }
+
+            if (password.length < 6) {
+                alert('비밀번호는 6자 이상이어야 합니다.');
+                return;
+            }
+
+            if (password !== passwordConfirm) {
+                alert('비밀번호가 일치하지 않습니다.');
+                return;
+            }
+
+            // 아이디 중복 확인
+            database.ref('users').orderByChild('username').equalTo(username).once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    alert('이미 사용 중인 아이디입니다.');
+                    return;
+                }
+
+                // 회원가입 처리
+                const newUserRef = database.ref('users').push();
+                newUserRef.set({
+                    username: username,
+                    password: password,
+                    name: name,
+                    status: 'pending',
+                    createdAt: Date.now()
+                }).then(() => {
+                    alert('회원가입이 완료되었습니다!\n관리자의 승인을 기다려주세요.');
+                    location.href = 'login.html';
+                }).catch((error) => {
+                    alert('회원가입 중 오류가 발생했습니다: ' + error.message);
+                });
+            });
+        }
+
+        // Enter 키 이벤트
+        document.getElementById('username').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') document.getElementById('password').focus();
+        });
+
+        document.getElementById('password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') document.getElementById('passwordConfirm').focus();
+        });
+
+        document.getElementById('passwordConfirm').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') document.getElementById('name').focus();
+        });
+
+        document.getElementById('name').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') register();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 로그인 - 동물 초성 빙고</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header-icon">
+                <div class="icon-wrapper gradient-purple">
+                    <span style="font-size: 3rem;">🔐</span>
+                </div>
+            </div>
+            <h2 class="subtitle">관리자 로그인</h2>
+            <p style="text-align: center; color: #cbd5e1; font-size: 0.875rem; margin-bottom: 2rem;">
+                관리자 계정으로 로그인하세요
+            </p>
+
+            <div class="input-group">
+                <label class="input-label">
+                    <span>👤</span>
+                    <span>아이디</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="adminId" 
+                    class="input-field" 
+                    placeholder="관리자 아이디"
+                >
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">
+                    <span>🔒</span>
+                    <span>비밀번호</span>
+                </label>
+                <input 
+                    type="password" 
+                    id="adminPassword" 
+                    class="input-field" 
+                    placeholder="비밀번호"
+                >
+            </div>
+
+            <button class="btn btn-primary" onclick="adminLogin()">
+                <span>🔐</span>
+                <span>로그인</span>
+            </button>
+
+            <button class="btn btn-ghost" onclick="location.href='index.html'">
+                <span>🏠</span>
+                <span>메인으로 돌아가기</span>
+            </button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCCuAOnkEmfFEE57D3bgWLU7xR2f0i2psI",
+            authDomain: "animal-bingo-90774.firebaseapp.com",
+            databaseURL: "https://animal-bingo-90774-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "animal-bingo-90774",
+            storageBucket: "animal-bingo-90774.firebasestorage.app",
+            messagingSenderId: "547100283990",
+            appId: "1:547100283990:web:d1206d278a9f46eaf2d7f7",
+            measurementId: "G-E8WLHPJ24E"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // 관리자 로그인
+        function adminLogin() {
+            const adminId = document.getElementById('adminId').value.trim();
+            const adminPassword = document.getElementById('adminPassword').value.trim();
+
+            console.log('관리자 로그인 시도:', adminId);
+
+            if (!adminId || !adminPassword) {
+                alert('아이디와 비밀번호를 입력해주세요.');
+                return;
+            }
+
+            // Firebase에서 해당 유저 확인
+            database.ref('users').orderByChild('username').equalTo(adminId).once('value')
+                .then((snapshot) => {
+                    console.log('사용자 조회 결과:', snapshot.exists());
+                    console.log('데이터:', snapshot.val());
+
+                    if (!snapshot.exists()) {
+                        alert('존재하지 않는 계정입니다.');
+                        return;
+                    }
+
+                    const userId = Object.keys(snapshot.val())[0];
+                    const user = snapshot.val()[userId];
+
+                    console.log('사용자 정보:', user);
+
+                    if (user.password !== adminPassword) {
+                        alert('비밀번호가 일치하지 않습니다.');
+                        return;
+                    }
+
+                    // 관리자 권한 확인
+                    console.log('관리자 권한:', user.isAdmin);
+                    if (!user.isAdmin) {
+                        alert('관리자 권한이 없습니다.');
+                        return;
+                    }
+
+                    // 로그인 성공
+                    console.log('관리자 로그인 성공');
+                    sessionStorage.setItem('adminLoggedIn', 'true');
+                    sessionStorage.setItem('adminId', userId);
+                    location.href = 'admin-dashboard.html';
+                })
+                .catch((error) => {
+                    console.error('로그인 오류:', error);
+                    alert('로그인 중 오류가 발생했습니다: ' + error.message);
+                });
+        }
+
+        // Enter 키 이벤트
+        document.getElementById('adminId').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('adminPassword').focus();
+            }
+        });
+
+        document.getElementById('adminPassword').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                adminLogin();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 대시보드 - 동물 초성 빙고</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard">
+            <div class="card">
+                <div class="dashboard-header">
+                    <div class="dashboard-title">
+                        <span style="font-size: 2rem;">🔐</span>
+                        <div>
+                            <h2>관리자 대시보드</h2>
+                            <p>회원 가입 승인 관리</p>
+                        </div>
+                    </div>
+                    <div class="dashboard-actions">
+                        <button class="btn btn-ghost" onclick="logout()">
+                            <span>🚪</span>
+                            <span>로그아웃</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 대기 중인 회원 -->
+                <div class="section" style="margin-bottom: 1.5rem;">
+                    <div class="section-header">
+                        <span>⏳</span>
+                        <span>승인 대기 중 (<span id="pendingCount">0</span>명)</span>
+                    </div>
+                    <div id="pendingList" class="player-list">
+                        <div class="empty-state">
+                            <p>승인 대기 중인 회원이 없습니다.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 승인된 회원 -->
+                <div class="section">
+                    <div class="section-header">
+                        <span>✅</span>
+                        <span>승인된 회원 (<span id="approvedCount">0</span>명)</span>
+                    </div>
+                    <div id="approvedList" class="player-list">
+                        <div class="empty-state">
+                            <p>승인된 회원이 없습니다.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCCuAOnkEmfFEE57D3bgWLU7xR2f0i2psI",
+            authDomain: "animal-bingo-90774.firebaseapp.com",
+            databaseURL: "https://animal-bingo-90774-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "animal-bingo-90774",
+            storageBucket: "animal-bingo-90774.firebasestorage.app",
+            messagingSenderId: "547100283990",
+            appId: "1:547100283990:web:d1206d278a9f46eaf2d7f7",
+            measurementId: "G-E8WLHPJ24E"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // 로그인 확인
+        if (sessionStorage.getItem('adminLoggedIn') !== 'true') {
+            alert('관리자 로그인이 필요합니다.');
+            location.href = 'admin-login.html';
+        }
+
+        // 회원 목록 로드
+        function loadUsers() {
+            database.ref('users').on('value', (snapshot) => {
+                const users = snapshot.val() || {};
+                const userArray = Object.entries(users).map(([id, data]) => ({
+                    id,
+                    ...data
+                }));
+
+                const pending = userArray.filter(u => u.status === 'pending');
+                const approved = userArray.filter(u => u.status === 'approved');
+
+                renderPendingUsers(pending);
+                renderApprovedUsers(approved);
+            });
+        }
+
+        // 대기 중인 회원 렌더링
+        function renderPendingUsers(users) {
+            const pendingList = document.getElementById('pendingList');
+            const pendingCount = document.getElementById('pendingCount');
+
+            pendingCount.textContent = users.length;
+
+            if (users.length === 0) {
+                pendingList.innerHTML = '<div class="empty-state"><p>승인 대기 중인 회원이 없습니다.</p></div>';
+            } else {
+                pendingList.innerHTML = users.map(user => `
+                    <div class="answer-item">
+                        <div class="answer-content">
+                            <div style="display: flex; flex-direction: column;">
+                                <span class="answer-word">${user.name}</span>
+                                <span class="answer-info">아이디: ${user.username}</span>
+                                <span class="answer-info" style="font-size: 0.75rem; color: #64748b;">가입일: ${new Date(user.createdAt).toLocaleString('ko-KR')}</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button onclick="approveUser('${user.id}')" style="padding: 0.5rem 1rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-weight: 600;">
+                                ✅ 승인
+                            </button>
+                            <button onclick="rejectUser('${user.id}')" style="padding: 0.5rem 1rem; background: #ef4444; color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-weight: 600;">
+                                ❌ 거부
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // 승인된 회원 렌더링
+        function renderApprovedUsers(users) {
+            const approvedList = document.getElementById('approvedList');
+            const approvedCount = document.getElementById('approvedCount');
+
+            approvedCount.textContent = users.length;
+
+            if (users.length === 0) {
+                approvedList.innerHTML = '<div class="empty-state"><p>승인된 회원이 없습니다.</p></div>';
+            } else {
+                approvedList.innerHTML = users.map(user => `
+                    <div class="answer-item">
+                        <div class="answer-content">
+                            <div style="display: flex; flex-direction: column;">
+                                <span class="answer-word">${user.name}</span>
+                                <span class="answer-info">아이디: ${user.username}</span>
+                                <span class="answer-info" style="font-size: 0.75rem; color: #64748b;">승인일: ${new Date(user.approvedAt || user.createdAt).toLocaleString('ko-KR')}</span>
+                            </div>
+                        </div>
+                        <button onclick="revokeUser('${user.id}')" class="delete-btn" style="font-size: 0.875rem;">
+                            🚫 승인 취소
+                        </button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // 승인
+        window.approveUser = function(userId) {
+            if (confirm('이 회원을 승인하시겠습니까?')) {
+                database.ref(`users/${userId}`).update({
+                    status: 'approved',
+                    approvedAt: Date.now()
+                });
+            }
+        };
+
+        // 거부
+        window.rejectUser = function(userId) {
+            if (confirm('이 회원을 거부하시겠습니까? (데이터가 삭제됩니다)')) {
+                database.ref(`users/${userId}`).remove();
+            }
+        };
+
+        // 승인 취소
+        window.revokeUser = function(userId) {
+            if (confirm('승인을 취소하시겠습니까?')) {
+                database.ref(`users/${userId}`).update({
+                    status: 'pending'
+                });
+            }
+        };
+
+        // 로그아웃
+        function logout() {
+            sessionStorage.removeItem('adminLoggedIn');
+            location.href = 'index.html';
+        }
+
+        // 초기 로드
+        loadUsers();
+    </script>
+</body>
+</html>
