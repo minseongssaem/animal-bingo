@@ -45,6 +45,7 @@
         // 로그인 확인
         const username = sessionStorage.getItem('username');
         const name = sessionStorage.getItem('name');
+        const expiryDate = sessionStorage.getItem('expiryDate');
 
         if (!username) {
             alert('로그인이 필요합니다.');
@@ -52,6 +53,31 @@
         }
 
         document.getElementById('userName').textContent = name || username;
+
+        // 만료일 표시
+        if (expiryDate && expiryDate !== 'unlimited') {
+            const expiry = new Date(parseInt(expiryDate));
+            const now = new Date();
+            const daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+            
+            const expiryInfo = document.createElement('p');
+            expiryInfo.style.cssText = 'text-align: center; font-size: 0.75rem; margin-top: 0.5rem;';
+            
+            if (daysLeft <= 7) {
+                expiryInfo.style.color = '#ef4444';
+                expiryInfo.innerHTML = `⚠️ 사용 기간이 <strong>${daysLeft}일</strong> 남았습니다<br>만료일: ${expiry.toLocaleDateString('ko-KR')}`;
+            } else {
+                expiryInfo.style.color = '#94a3b8';
+                expiryInfo.innerHTML = `사용 기간 만료일: ${expiry.toLocaleDateString('ko-KR')} (${daysLeft}일 남음)`;
+            }
+            
+            document.querySelector('.card').insertBefore(expiryInfo, document.querySelector('.button-group'));
+        } else if (expiryDate === 'unlimited') {
+            const unlimitedInfo = document.createElement('p');
+            unlimitedInfo.style.cssText = 'text-align: center; color: #10b981; font-size: 0.75rem; margin-top: 0.5rem; margin-bottom: 1rem;';
+            unlimitedInfo.innerHTML = '✨ 무제한 사용 계정';
+            document.querySelector('.card').insertBefore(unlimitedInfo, document.querySelector('.button-group'));
+        }
 
         // 로그아웃
         function logout() {

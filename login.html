@@ -112,10 +112,28 @@
                     return;
                 }
 
+                // 만료일 체크
+                if (user.expiryDate && user.expiryDate !== 'unlimited') {
+                    const expiryDate = new Date(user.expiryDate);
+                    const now = new Date();
+                    
+                    if (expiryDate < now) {
+                        alert('계정 사용 기간이 만료되었습니다.\n관리자에게 문의하세요.');
+                        return;
+                    }
+
+                    // 만료 임박 알림 (7일 이내)
+                    const daysLeft = Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24));
+                    if (daysLeft <= 7) {
+                        alert(`⚠️ 계정 사용 기간이 ${daysLeft}일 남았습니다.\n만료일: ${expiryDate.toLocaleDateString('ko-KR')}`);
+                    }
+                }
+
                 // 로그인 성공
                 sessionStorage.setItem('userId', userId);
                 sessionStorage.setItem('username', user.username);
                 sessionStorage.setItem('name', user.name);
+                sessionStorage.setItem('expiryDate', user.expiryDate || 'unlimited');
                 location.href = 'host-menu.html';
             });
         }

@@ -107,21 +107,34 @@
                 pendingList.innerHTML = '<div class="empty-state"><p>승인 대기 중인 회원이 없습니다.</p></div>';
             } else {
                 pendingList.innerHTML = users.map(user => `
-                    <div class="answer-item">
-                        <div class="answer-content">
+                    <div class="answer-item" style="flex-direction: column; align-items: stretch;">
+                        <div class="answer-content" style="margin-bottom: 1rem;">
                             <div style="display: flex; flex-direction: column;">
                                 <span class="answer-word">${user.name}</span>
                                 <span class="answer-info">아이디: ${user.username}</span>
                                 <span class="answer-info" style="font-size: 0.75rem; color: #64748b;">가입일: ${new Date(user.createdAt).toLocaleString('ko-KR')}</span>
                             </div>
                         </div>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <button onclick="approveUser('${user.id}')" style="padding: 0.5rem 1rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-weight: 600;">
-                                ✅ 승인
-                            </button>
-                            <button onclick="rejectUser('${user.id}')" style="padding: 0.5rem 1rem; background: #ef4444; color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-weight: 600;">
-                                ❌ 거부
-                            </button>
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <label style="font-size: 0.875rem; color: #cbd5e1; white-space: nowrap;">사용 기간:</label>
+                                <select id="period-${user.id}" style="flex: 1; padding: 0.5rem; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 0.5rem; color: white; cursor: pointer;">
+                                    <option value="7">7일</option>
+                                    <option value="30" selected>30일 (1개월)</option>
+                                    <option value="90">90일 (3개월)</option>
+                                    <option value="180">180일 (6개월)</option>
+                                    <option value="365">365일 (1년)</option>
+                                    <option value="9999">무제한</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button onclick="approveUser('${user.id}')" style="flex: 1; padding: 0.5rem 1rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-weight: 600;">
+                                    ✅ 승인
+                                </button>
+                                <button onclick="rejectUser('${user.id}')" style="flex: 1; padding: 0.5rem 1rem; background: #ef4444; color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-weight: 600;">
+                                    ❌ 거부
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `).join('');
@@ -138,31 +151,102 @@
             if (users.length === 0) {
                 approvedList.innerHTML = '<div class="empty-state"><p>승인된 회원이 없습니다.</p></div>';
             } else {
-                approvedList.innerHTML = users.map(user => `
-                    <div class="answer-item">
-                        <div class="answer-content">
+                approvedList.innerHTML = users.map(user => {
+                    const expiryDate = user.expiryDate ? new Date(user.expiryDate) : null;
+                    const isExpired = expiryDate && expiryDate < new Date();
+                    const expiryText = user.expiryDate === 'unlimited' ? '무제한' : 
+                                      expiryDate ? expiryDate.toLocaleDateString('ko-KR') : '설정 안됨';
+                    
+                    return `
+                    <div class="answer-item" style="flex-direction: column; align-items: stretch; ${isExpired ? 'opacity: 0.6; border: 1px solid #ef4444;' : ''}">
+                        <div class="answer-content" style="margin-bottom: 0.75rem;">
                             <div style="display: flex; flex-direction: column;">
-                                <span class="answer-word">${user.name}</span>
+                                <span class="answer-word">${user.name} ${isExpired ? '<span style="color: #ef4444; font-size: 0.875rem;">(만료됨)</span>' : ''}</span>
                                 <span class="answer-info">아이디: ${user.username}</span>
                                 <span class="answer-info" style="font-size: 0.75rem; color: #64748b;">승인일: ${new Date(user.approvedAt || user.createdAt).toLocaleString('ko-KR')}</span>
+                                <span class="answer-info" style="font-size: 0.75rem; color: ${isExpired ? '#ef4444' : '#10b981'};">
+                                    만료일: ${expiryText}
+                                </span>
                             </div>
                         </div>
-                        <button onclick="revokeUser('${user.id}')" class="delete-btn" style="font-size: 0.875rem;">
-                            🚫 승인 취소
-                        </button>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button onclick="extendPeriod('${user.id}')" style="flex: 1; padding: 0.5rem 1rem; background: #06b6d4; color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-weight: 600; font-size: 0.875rem;">
+                                🔄 기간 연장
+                            </button>
+                            <button onclick="revokeUser('${user.id}')" style="padding: 0.5rem 1rem; background: #ef4444; color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-weight: 600; font-size: 0.875rem;">
+                                🚫 승인 취소
+                            </button>
+                        </div>
                     </div>
-                `).join('');
+                `}).join('');
             }
         }
 
         // 승인
         window.approveUser = function(userId) {
-            if (confirm('이 회원을 승인하시겠습니까?')) {
+            const periodSelect = document.getElementById(`period-${userId}`);
+            const days = parseInt(periodSelect.value);
+            
+            if (confirm(`이 회원을 승인하시겠습니까?\n사용 기간: ${days === 9999 ? '무제한' : days + '일'}`)) {
+                let expiryDate;
+                if (days === 9999) {
+                    expiryDate = 'unlimited';
+                } else {
+                    const expiry = new Date();
+                    expiry.setDate(expiry.getDate() + days);
+                    expiryDate = expiry.getTime();
+                }
+
                 database.ref(`users/${userId}`).update({
                     status: 'approved',
-                    approvedAt: Date.now()
+                    approvedAt: Date.now(),
+                    expiryDate: expiryDate,
+                    periodDays: days
+                }).then(() => {
+                    alert('승인이 완료되었습니다.');
+                }).catch((error) => {
+                    alert('승인 중 오류가 발생했습니다: ' + error.message);
                 });
             }
+        };
+
+        // 기간 연장
+        window.extendPeriod = function(userId) {
+            const days = prompt('연장할 기간을 입력하세요 (일):\n\n예시:\n- 30 (30일)\n- 365 (1년)\n- 9999 (무제한)', '30');
+            
+            if (days === null) return;
+            
+            const daysNum = parseInt(days);
+            if (isNaN(daysNum) || daysNum < 1) {
+                alert('올바른 숫자를 입력해주세요.');
+                return;
+            }
+
+            database.ref(`users/${userId}`).once('value', (snapshot) => {
+                const user = snapshot.val();
+                let newExpiryDate;
+
+                if (daysNum === 9999) {
+                    newExpiryDate = 'unlimited';
+                } else {
+                    const currentExpiry = user.expiryDate === 'unlimited' ? new Date() : 
+                                         user.expiryDate ? new Date(user.expiryDate) : new Date();
+                    
+                    // 현재 날짜보다 이전이면 현재 날짜부터, 아니면 만료일부터 연장
+                    const baseDate = currentExpiry < new Date() ? new Date() : currentExpiry;
+                    baseDate.setDate(baseDate.getDate() + daysNum);
+                    newExpiryDate = baseDate.getTime();
+                }
+
+                database.ref(`users/${userId}`).update({
+                    expiryDate: newExpiryDate,
+                    lastExtended: Date.now()
+                }).then(() => {
+                    alert(`사용 기간이 ${daysNum === 9999 ? '무제한으로' : daysNum + '일'} 연장되었습니다.`);
+                }).catch((error) => {
+                    alert('기간 연장 중 오류가 발생했습니다: ' + error.message);
+                });
+            });
         };
 
         // 거부
