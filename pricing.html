@@ -438,6 +438,9 @@
                     <div style="color: #e2e8f0; font-size: 0.875rem; margin-bottom: 0.5rem;">
                         📧 이메일: <strong>fuhaha1047@naver.com</strong>
                     </div>
+                    <div style="color: #e2e8f0; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                        💬 문자: <strong>010-7322-8502</strong>
+                    </div>
                     <div style="color: #94a3b8; font-size: 0.875rem;">
                         입금자명과 선택하신 플랜(<span id="selectedPlan"></span>)을 알려주시면<br>
                         확인 후 바로 승인해드리겠습니다! 🎉
@@ -458,7 +461,7 @@
         </div>
     </div>
 
-    <script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
         console.log('요금제 페이지 로드됨');
 
         // URL 파라미터에서 사용자 이름 가져오기
@@ -496,13 +499,4 @@
                 navigator.clipboard.writeText(accountNumber).then(() => {
                     alert('계좌번호가 복사되었습니다!\n' + accountNumber);
                 }).catch(() => {
-                    alert('계좌번호: 3333-01-8123773\n직접 복사해주세요.');
-                });
-            } else {
-                // 구형 브라우저 대응
-                alert('계좌번호: 3333-01-8123773');
-            }
-        }
-    </script>
-</body>
-</html>
+                    alert('계좌번호: 3333-01-81237
