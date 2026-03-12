@@ -108,10 +108,14 @@
 
         // 회원가입
         function register() {
+            console.log('회원가입 버튼 클릭됨');
+            
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value.trim();
             const passwordConfirm = document.getElementById('passwordConfirm').value.trim();
             const name = document.getElementById('name').value.trim();
+
+            console.log('입력값:', { username, password: '***', passwordConfirm: '***', name });
 
             // 유효성 검사
             if (!username || !password || !passwordConfirm || !name) {
@@ -134,28 +138,42 @@
                 return;
             }
 
-            // 아이디 중복 확인
-            database.ref('users').orderByChild('username').equalTo(username).once('value', (snapshot) => {
-                if (snapshot.exists()) {
-                    alert('이미 사용 중인 아이디입니다.');
-                    return;
-                }
+            console.log('유효성 검사 통과, 아이디 중복 확인 중...');
 
-                // 회원가입 처리
-                const newUserRef = database.ref('users').push();
-                newUserRef.set({
-                    username: username,
-                    password: password,
-                    name: name,
-                    status: 'pending',
-                    createdAt: Date.now()
-                }).then(() => {
-                    alert('회원가입이 완료되었습니다!\n관리자의 승인을 기다려주세요.');
-                    location.href = 'login.html';
-                }).catch((error) => {
+            // 아이디 중복 확인
+            database.ref('users').orderByChild('username').equalTo(username).once('value')
+                .then((snapshot) => {
+                    console.log('중복 확인 결과:', snapshot.exists());
+                    
+                    if (snapshot.exists()) {
+                        alert('이미 사용 중인 아이디입니다.');
+                        return;
+                    }
+
+                    console.log('회원가입 처리 중...');
+
+                    // 회원가입 처리
+                    const newUserRef = database.ref('users').push();
+                    return newUserRef.set({
+                        username: username,
+                        password: password,
+                        name: name,
+                        status: 'pending',
+                        createdAt: Date.now()
+                    });
+                })
+                .then((result) => {
+                    if (result !== undefined) {
+                        console.log('회원가입 완료');
+                        alert('회원가입이 완료되었습니다!\n요금제를 선택하고 입금해주세요.');
+                        // 요금제 페이지로 이동 (이름 전달)
+                        location.href = 'pricing.html?name=' + encodeURIComponent(name);
+                    }
+                })
+                .catch((error) => {
+                    console.error('회원가입 오류:', error);
                     alert('회원가입 중 오류가 발생했습니다: ' + error.message);
                 });
-            });
         }
 
         // Enter 키 이벤트
