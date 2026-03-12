@@ -394,6 +394,13 @@
         let currentScore = 0;
         let hasSubmitted = false;
 
+        // URL 파라미터에서 게임 코드 가져오기 (QR 코드로 접속 시)
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlGameCode = urlParams.get('code');
+        if (urlGameCode) {
+            document.getElementById('gameCodeInput').value = urlGameCode;
+        }
+
         // 게임 참가
         function joinGame() {
             const codeInput = document.getElementById('gameCodeInput').value.trim();
