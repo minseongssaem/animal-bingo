@@ -478,24 +478,30 @@
                 const data = snapshot.val();
                 if (!data) return;
 
+                console.log('게임 상태 업데이트:', data.status, 'revealed:', data.revealed);
+
                 // 상태가 변경되었을 때만 처리
                 if (data.status === 'playing') {
-                    // 정답 발표 시 모달 표시
-                    if (data.revealed && hasSubmitted && !currentGameRevealed) {
+                    // 정답 발표 시 모달 표시 (제출 여부와 무관)
+                    if (data.revealed && !currentGameRevealed) {
+                        console.log('정답 발표! 모달 표시');
                         currentGameRevealed = true;
                         showScoreModal();
                     } else if (!data.revealed && currentGameRevealed) {
                         // 새 라운드 시작
+                        console.log('새 라운드 시작');
                         currentGameRevealed = false;
                         hasSubmitted = false;
                         showGameScreen(data);
                     } else if (!data.revealed && currentGameStatus !== 'playing') {
                         // 처음 게임 시작
+                        console.log('게임 시작');
                         currentGameStatus = 'playing';
                         hasSubmitted = false;
                         showGameScreen(data);
                     }
                 } else if (data.status === 'finished' && currentGameStatus !== 'finished') {
+                    console.log('게임 종료');
                     currentGameStatus = 'finished';
                     showFinishedScreen();
                 }
@@ -530,6 +536,7 @@
                 const mySubmission = Object.values(submissions).find(sub => sub.playerId === playerId);
 
                 if (mySubmission) {
+                    // 제출한 경우
                     document.getElementById('modalSubmittedAnswer').textContent = mySubmission.answer;
                     document.getElementById('modalEarnedPoints').textContent = mySubmission.points;
                     document.getElementById('modalTotalScore').textContent = currentScore;
@@ -542,9 +549,15 @@
                         document.getElementById('modalEarnedPoints').parentElement.innerHTML = 
                             '<div style="font-size: 3rem; font-weight: 700; color: #10b981;">+<span id="modalEarnedPoints">' + mySubmission.points + '</span>점</div>';
                     }
-                    
-                    document.getElementById('scoreModal').style.display = 'flex';
+                } else {
+                    // 제출하지 않은 경우
+                    document.getElementById('modalSubmittedAnswer').textContent = '미제출';
+                    document.getElementById('modalEarnedPoints').parentElement.innerHTML = 
+                        '<div style="font-size: 3rem; font-weight: 700; color: #64748b;">0점</div>';
+                    document.getElementById('modalTotalScore').textContent = currentScore;
                 }
+                
+                document.getElementById('scoreModal').style.display = 'flex';
             });
         }
 

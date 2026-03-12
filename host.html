@@ -585,31 +585,51 @@
                 return;
             }
 
+            console.log('정답 발표 시작');
+
             // 제출된 답변들의 점수를 실제 플레이어 점수에 반영
             database.ref(`games/${gameCode}/submissions`).once('value', (snapshot) => {
                 const submissions = snapshot.val() || {};
                 
+                console.log('제출된 답변:', submissions);
+
+                const updatePromises = [];
+
                 Object.values(submissions).forEach(sub => {
-                    database.ref(`games/${gameCode}/players/${sub.playerId}`).once('value', (playerSnapshot) => {
-                        const playerData = playerSnapshot.val();
-                        if (playerData) {
-                            database.ref(`games/${gameCode}/players/${sub.playerId}`).update({
-                                score: (playerData.score || 0) + sub.points
-                            });
-                        }
+                    const promise = database.ref(`games/${gameCode}/players/${sub.playerId}`).once('value')
+                        .then((playerSnapshot) => {
+                            const playerData = playerSnapshot.val();
+                            if (playerData) {
+                                const newScore = (playerData.score || 0) + sub.points;
+                                console.log(`${sub.playerName} 점수 업데이트: ${playerData.score || 0} + ${sub.points} = ${newScore}`);
+                                return database.ref(`games/${gameCode}/players/${sub.playerId}`).update({
+                                    score: newScore
+                                });
+                            }
+                        });
+                    updatePromises.push(promise);
+                });
+
+                // 모든 점수 업데이트 완료 후 정답 발표
+                Promise.all(updatePromises).then(() => {
+                    console.log('모든 점수 업데이트 완료, revealed = true 설정');
+                    
+                    // 정답 발표 상태로 변경
+                    return database.ref(`games/${gameCode}`).update({
+                        revealed: true
                     });
+                }).then(() => {
+                    console.log('정답 발표 완료');
+                    
+                    // 정답 모달 표시
+                    showAnswerModal();
+
+                    document.getElementById('revealBtn').style.display = 'none';
+                    document.getElementById('nextBtn').style.display = 'flex';
+                }).catch((error) => {
+                    console.error('정답 발표 중 오류:', error);
+                    alert('정답 발표 중 오류가 발생했습니다: ' + error.message);
                 });
-
-                // 정답 발표 상태로 변경
-                database.ref(`games/${gameCode}`).update({
-                    revealed: true
-                });
-
-                // 정답 모달 표시
-                showAnswerModal();
-
-                document.getElementById('revealBtn').style.display = 'none';
-                document.getElementById('nextBtn').style.display = 'flex';
             });
         }
 
@@ -658,9 +678,13 @@
                 return;
             }
 
+            console.log('다음 라운드 시작, 선택된 초성:', currentChoseong);
+
             database.ref(`games/${gameCode}`).once('value', (snapshot) => {
                 const data = snapshot.val();
                 const currentRound = data.currentRound || 0;
+
+                console.log('현재 라운드:', currentRound, '→ 다음:', currentRound + 1);
 
                 database.ref(`games/${gameCode}`).update({
                     status: 'playing',
@@ -670,22 +694,29 @@
                     timer: timeLimit,
                     startTime: Date.now(),
                     revealed: false
+                }).then(() => {
+                    console.log('게임 상태 업데이트 완료');
+
+                    // 제출 목록 초기화
+                    return database.ref(`games/${gameCode}/submissions`).set({});
+                }).then(() => {
+                    console.log('제출 목록 초기화 완료');
+
+                    // 초성 선택 초기화
+                    currentChoseong = '';
+                    document.querySelectorAll('.choseong-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    document.getElementById('selectedInfo').style.display = 'none';
+
+                    document.getElementById('nextBtn').style.display = 'none';
+                    document.getElementById('revealBtn').style.display = 'flex';
+
+                    startTimer();
+                }).catch((error) => {
+                    console.error('다음 라운드 시작 오류:', error);
+                    alert('다음 라운드 시작 중 오류가 발생했습니다: ' + error.message);
                 });
-
-                // 제출 목록 초기화
-                database.ref(`games/${gameCode}/submissions`).set({});
-
-                // 초성 선택 초기화
-                currentChoseong = '';
-                document.querySelectorAll('.choseong-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                document.getElementById('selectedInfo').style.display = 'none';
-
-                document.getElementById('nextBtn').style.display = 'none';
-                document.getElementById('revealBtn').style.display = 'flex';
-
-                startTimer();
             });
         }
 
