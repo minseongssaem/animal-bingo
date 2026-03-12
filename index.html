@@ -3,51 +3,448 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>팀빌딩 동물 초성 빙고</title>
-    <link rel="stylesheet" href="style.css">
+    <title>동물 초성 빙고</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(180deg, #0d1b2a 0%, #1b263b 50%, #0d1b2a 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 별자리 네트워크 배경 */
+        .constellation {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0.3;
+        }
+
+        .constellation-line {
+            position: absolute;
+            background: rgba(100, 150, 200, 0.2);
+            transform-origin: left center;
+        }
+
+        /* 발자국 패턴 */
+        .paw-pattern {
+            position: absolute;
+            font-size: 2.5rem;
+            opacity: 0.12;
+            color: #4a5568;
+        }
+
+        /* 떠다니는 ㄱㄴㄷ 배경 */
+        .bg-letter {
+            position: absolute;
+            font-size: 8rem;
+            font-weight: 900;
+            opacity: 0.05;
+            color: #667eea;
+        }
+
+        /* 떠다니는 동물 이모지 */
+        .floating-emoji {
+            position: absolute;
+            font-size: 3.5rem;
+            animation: float-gentle 20s infinite ease-in-out;
+        }
+
+        @keyframes float-gentle {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        /* 반짝이는 별 */
+        .sparkle {
+            position: absolute;
+            color: white;
+            opacity: 0.6;
+            animation: twinkle 3s infinite ease-in-out;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.3); }
+        }
+
+        .container {
+            max-width: 650px;
+            width: 100%;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* 로고 */
+        .logo-section {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo-icon {
+            width: 160px;
+            height: 160px;
+            background: linear-gradient(135deg, #5dade2 0%, #3498db 100%);
+            border-radius: 35px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+            box-shadow: 
+                0 20px 60px rgba(52, 152, 219, 0.5),
+                0 0 0 8px rgba(52, 152, 219, 0.15);
+            position: relative;
+        }
+
+        .logo-icon::before {
+            content: '✨';
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 1.8rem;
+        }
+
+        .logo-fox {
+            font-size: 7rem;
+            line-height: 1;
+        }
+
+        .logo-letters {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+            font-size: 2rem;
+            font-weight: 900;
+        }
+
+        .logo-letters span:nth-child(1) { color: #ff6b9d; }
+        .logo-letters span:nth-child(2) { color: #feca57; }
+        .logo-letters span:nth-child(3) { color: #48dbfb; }
+
+        .main-title {
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            letter-spacing: -3px;
+            line-height: 1.1;
+        }
+
+        .title-part1 {
+            color: #ffd1c1;
+            text-shadow: 
+                3px 3px 0 rgba(0, 0, 0, 0.2),
+                0 0 30px rgba(255, 209, 193, 0.5);
+        }
+
+        .title-part2 {
+            color: #a8dadc;
+            text-shadow: 
+                3px 3px 0 rgba(0, 0, 0, 0.2),
+                0 0 30px rgba(168, 218, 220, 0.5);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #8ab4f8;
+            font-weight: 600;
+            letter-spacing: 3px;
+            margin-bottom: 3rem;
+        }
+
+        /* 메인 카드 */
+        .main-card {
+            background: rgba(15, 30, 60, 0.5);
+            backdrop-filter: blur(30px);
+            border-radius: 40px;
+            padding: 3rem 2.5rem;
+            border: 2px solid rgba(100, 150, 200, 0.2);
+            box-shadow: 
+                0 40px 100px rgba(0, 0, 0, 0.6),
+                inset 0 2px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        /* 규칙 박스 */
+        .rules-box {
+            background: rgba(10, 20, 45, 0.7);
+            border-radius: 25px;
+            padding: 2.5rem;
+            margin-bottom: 2.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 배경 ㄱㄴㄷ */
+        .rules-bg-letters {
+            position: absolute;
+            font-size: 12rem;
+            font-weight: 900;
+            opacity: 0.03;
+            color: #667eea;
+        }
+
+        .rules-bg-letters:nth-child(1) { top: -20px; left: 10%; }
+        .rules-bg-letters:nth-child(2) { top: 30%; left: 35%; }
+        .rules-bg-letters:nth-child(3) { top: 10%; right: 15%; }
+
+        .rule-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+            color: #e8f0fe;
+            font-size: 1.05rem;
+            font-weight: 500;
+            position: relative;
+            z-index: 2;
+        }
+
+        .rule-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .rule-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        /* 버튼 */
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .game-button {
+            height: 75px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-button::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 25px;
+            padding: 3px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.1));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+        }
+
+        .btn-host {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            color: white;
+            box-shadow: 
+                0 0 40px rgba(255, 107, 107, 0.6),
+                0 15px 40px rgba(255, 107, 107, 0.4),
+                inset 0 -2px 20px rgba(0, 0, 0, 0.2),
+                inset 0 2px 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-host:hover {
+            transform: translateY(-5px);
+            box-shadow: 
+                0 0 60px rgba(255, 107, 107, 0.8),
+                0 20px 60px rgba(255, 107, 107, 0.6);
+        }
+
+        .btn-player {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a8a0 100%);
+            color: white;
+            box-shadow: 
+                0 0 40px rgba(78, 205, 196, 0.6),
+                0 15px 40px rgba(78, 205, 196, 0.4),
+                inset 0 -2px 20px rgba(0, 0, 0, 0.2),
+                inset 0 2px 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-player:hover {
+            transform: translateY(-5px);
+            box-shadow: 
+                0 0 60px rgba(78, 205, 196, 0.8),
+                0 20px 60px rgba(78, 205, 196, 0.6);
+        }
+
+        .btn-admin {
+            background: rgba(30, 50, 80, 0.6);
+            color: #b8c5d6;
+            border: 2px solid rgba(100, 130, 180, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-admin:hover {
+            background: rgba(40, 65, 100, 0.7);
+            border-color: rgba(120, 160, 220, 0.5);
+            transform: translateY(-3px);
+        }
+
+        .button-emoji {
+            font-size: 2rem;
+        }
+
+        /* 큰 별 */
+        .big-star {
+            position: fixed;
+            bottom: 50px;
+            right: 50px;
+            font-size: 4rem;
+            color: white;
+            opacity: 0.4;
+            animation: rotate-star 20s linear infinite;
+        }
+
+        @keyframes rotate-star {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .main-title {
+                font-size: 3rem;
+            }
+
+            .logo-icon {
+                width: 130px;
+                height: 130px;
+            }
+
+            .logo-fox {
+                font-size: 5.5rem;
+            }
+
+            .main-card {
+                padding: 2rem 1.5rem;
+            }
+
+            .game-button {
+                height: 65px;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
 </head>
 <body>
+    <!-- 별자리 네트워크 -->
+    <div class="constellation">
+        <div class="constellation-line" style="width: 150px; height: 2px; top: 15%; left: 10%; transform: rotate(45deg);"></div>
+        <div class="constellation-line" style="width: 100px; height: 2px; top: 25%; right: 15%; transform: rotate(-30deg);"></div>
+        <div class="constellation-line" style="width: 120px; height: 2px; bottom: 30%; left: 20%; transform: rotate(60deg);"></div>
+    </div>
+
+    <!-- 발자국들 -->
+    <div class="paw-pattern" style="top: 8%; left: 8%;">🐾</div>
+    <div class="paw-pattern" style="top: 25%; left: 5%;">🐾</div>
+    <div class="paw-pattern" style="top: 50%; left: 7%;">🐾</div>
+    <div class="paw-pattern" style="top: 28%; right: 25%;">🐾</div>
+    <div class="paw-pattern" style="top: 45%; right: 28%;">🐾</div>
+    <div class="paw-pattern" style="bottom: 22%; right: 8%;">🐾</div>
+    <div class="paw-pattern" style="bottom: 35%; right: 5%;">🐾</div>
+
+    <!-- 배경 자음들 -->
+    <div class="bg-letter" style="top: 12%; right: 12%;">ㅈ</div>
+    <div class="bg-letter" style="bottom: 18%; right: 18%;">ㅊ</div>
+
+    <!-- 떠다니는 동물들 -->
+    <div class="floating-emoji" style="top: 38%; right: 18%; animation-delay: 0s;">🦁</div>
+    <div class="floating-emoji" style="top: 40%; right: 8%; animation-delay: 2s;">🐧</div>
+    <div class="floating-emoji" style="top: 55%; right: 25%; animation-delay: 4s;">🐵</div>
+    <div class="floating-emoji" style="top: 57%; right: 12%; animation-delay: 6s;">🦉</div>
+    <div class="floating-emoji" style="bottom: 28%; right: 20%; animation-delay: 8s;">🦉</div>
+
+    <!-- 반짝이는 별들 -->
+    <div class="sparkle" style="top: 28%; right: 20%; animation-delay: 0s;">✨</div>
+    <div class="sparkle" style="top: 32%; right: 10%; animation-delay: 1s;">✨</div>
+    <div class="sparkle" style="top: 42%; right: 32%; animation-delay: 2s;">+</div>
+    <div class="sparkle" style="top: 48%; right: 8%; animation-delay: 1.5s;">+</div>
+
+    <!-- 큰 별 -->
+    <div class="big-star">✦</div>
+
     <div class="container">
-        <div class="card">
-            <div class="header-icon">
-                <div class="icon-wrapper gradient-cyan">
-                    🎮
+        <div class="logo-section">
+            <div class="logo-icon">
+                <span class="logo-fox">🦊</span>
+                <div class="logo-letters">
+                    <span>ㄱ</span>
+                    <span>ㄴ</span>
+                    <span>ㄷ</span>
                 </div>
             </div>
-            <h1 class="title gradient-text">팀빌딩</h1>
-            <h2 class="subtitle">동물 초성 빙고</h2>
-            
-            <div class="game-rules">
-                <p class="rule-item">
-                    <span class="emoji">🎯</span> 초성으로 시작하는 동물을 맞춰보세요
-                </p>
-                <p class="rule-item">
-                    <span class="emoji">🎯</span> 팀별 경쟁으로 점수를 획득하세요
-                </p>
-                <p class="rule-item">
-                    <span class="emoji">⭐</span> 점수는 글자수×100점씩 획득합니다
-                </p>
-                <p class="rule-item">
-                    <span class="emoji">🎉</span> 최종 점수가 높은 팀이 승리합니다
-                </p>
+            <h1 class="main-title">
+                <div class="title-part1">동물 초성 <span class="title-part2">빙고</span></div>
+            </h1>
+            <p class="subtitle">팀빌딩 게임의 정석</p>
+        </div>
+
+        <div class="main-card">
+            <div class="rules-box">
+                <div class="rules-bg-letters">ㄱ</div>
+                <div class="rules-bg-letters">ㄴ</div>
+                <div class="rules-bg-letters">ㄷ</div>
+
+                <div class="rule-item">
+                    <span class="rule-icon">🎯</span>
+                    <span>초성으로 시작하는 동물을 맞춰보세요</span>
+                </div>
+                <div class="rule-item">
+                    <span class="rule-icon">🏆</span>
+                    <span>팀별 경쟁으로 점수를 획득해요</span>
+                </div>
+                <div class="rule-item">
+                    <span class="rule-icon">⭐</span>
+                    <span>글자수 × 100점씩 획득합니다</span>
+                </div>
+                <div class="rule-item">
+                    <span class="rule-icon">🎉</span>
+                    <span>최종 점수가 높은 팀이 승리합니다</span>
+                </div>
             </div>
 
-            <div class="button-group">
-                <button class="btn btn-primary" onclick="location.href='login.html'">
-                    <span class="btn-emoji">🦊</span>
+            <div class="buttons">
+                <button class="game-button btn-host" onclick="location.href='login.html'">
+                    <span class="button-emoji">🦊</span>
                     <span>진행자 모드</span>
                 </button>
 
-                <button class="btn btn-secondary" onclick="location.href='player.html'">
-                    <span class="btn-emoji">🐨</span>
+                <button class="game-button btn-player" onclick="location.href='player.html'">
+                    <span class="button-emoji">🐨</span>
                     <span>참가자 모드</span>
                 </button>
-            </div>
 
-            <button class="btn btn-ghost" onclick="location.href='admin-login.html'" style="font-size: 0.875rem; padding: 0.75rem 1rem;">
-                <span>🔐</span>
-                <span>관리자 모드</span>
-            </button>
+                <button class="game-button btn-admin" onclick="location.href='admin-login.html'">
+                    <span>🔐</span>
+                    <span>관리자 모드</span>
+                </button>
+            </div>
         </div>
     </div>
 </body>
