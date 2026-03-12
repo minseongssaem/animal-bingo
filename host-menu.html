@@ -126,8 +126,22 @@
         // 로그아웃
         function logout() {
             if (confirm('로그아웃 하시겠습니까?')) {
-                sessionStorage.clear();
-                location.href = 'index.html';
+                // 관리자로 로그인했는지 확인
+                const isAdmin = sessionStorage.getItem('adminLoggedIn') === 'true';
+                
+                if (isAdmin) {
+                    // 관리자인 경우: 관리자 로그인만 유지하고 진행자 정보 삭제
+                    sessionStorage.removeItem('userId');
+                    sessionStorage.removeItem('username');
+                    sessionStorage.removeItem('name');
+                    sessionStorage.removeItem('expiryDate');
+                    sessionStorage.removeItem('isAdmin');
+                    location.href = 'admin-dashboard.html'; // 관리자 대시보드로
+                } else {
+                    // 일반 진행자인 경우: 모두 삭제
+                    sessionStorage.clear();
+                    location.href = 'index.html';
+                }
             }
         }
     </script>
