@@ -31,9 +31,15 @@
 
         .pricing-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 2rem;
             margin-bottom: 3rem;
+        }
+
+        @media (max-width: 1024px) {
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .pricing-card {
@@ -430,7 +436,7 @@
 
                 <div class="contact-info">
                     <div style="color: #e2e8f0; font-size: 0.875rem; margin-bottom: 0.5rem;">
-                        📧 이메일: <strong>fuhaha1047@naver.com</strong>
+                        📧 이메일: <strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e583908d848d84d4d5d1d2a58b84938097cb868a88">[email&#160;protected]</a></strong>
                     </div>
                     <div style="color: #94a3b8; font-size: 0.875rem;">
                         입금자명과 선택하신 플랜(<span id="selectedPlan"></span>)을 알려주시면<br>
@@ -452,7 +458,7 @@
         </div>
     </div>
 
-    <script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
         // URL 파라미터에서 사용자 이름 가져오기
         const urlParams = new URLSearchParams(window.location.search);
         const userName = urlParams.get('name') || '가입자';
@@ -475,12 +481,4 @@
 
         function copyAccount() {
             const accountNumber = '3333-01-8123773';
-            navigator.clipboard.writeText(accountNumber).then(() => {
-                alert('계좌번호가 복사되었습니다!\n' + accountNumber);
-            }).catch(() => {
-                alert('계좌번호: 3333-01-8123773');
-            });
-        }
-    </script>
-</body>
-</html>
+            navigator.clipboard.writeText(accountNumber).then((
