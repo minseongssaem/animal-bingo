@@ -430,7 +430,7 @@
             </div>
 
             <div class="buttons">
-                <button class="game-button btn-host" onclick="location.href='login.html'">
+                <button class="game-button btn-host" onclick="goToHost()">
                     <span class="button-emoji">🦊</span>
                     <span>진행자 모드</span>
                 </button>
@@ -440,12 +440,41 @@
                     <span>참가자 모드</span>
                 </button>
 
-                <button class="game-button btn-admin" onclick="location.href='admin-login.html'">
+                <button class="game-button btn-admin" onclick="goToAdmin()">
                     <span>🔐</span>
                     <span>관리자 모드</span>
                 </button>
             </div>
         </div>
     </div>
+
+    <script>
+        // 진행자 모드 버튼 클릭
+        function goToHost() {
+            const username = sessionStorage.getItem('username');
+            const adminLoggedIn = sessionStorage.getItem('adminLoggedIn');
+            
+            // 이미 로그인되어 있으면 진행자 메뉴로
+            if (username || adminLoggedIn === 'true') {
+                location.href = 'host-menu.html';
+            } else {
+                // 로그인 안 되어있으면 로그인 페이지로
+                location.href = 'login.html';
+            }
+        }
+
+        // 관리자 모드 버튼 클릭
+        function goToAdmin() {
+            const adminLoggedIn = sessionStorage.getItem('adminLoggedIn');
+            
+            // 관리자 로그인되어 있으면 대시보드로
+            if (adminLoggedIn === 'true') {
+                location.href = 'admin-dashboard.html';
+            } else {
+                // 로그인 안 되어있으면 관리자 로그인 페이지로
+                location.href = 'admin-login.html';
+            }
+        }
+    </script>
 </body>
 </html>
