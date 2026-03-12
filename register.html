@@ -147,7 +147,7 @@
                     
                     if (snapshot.exists()) {
                         alert('이미 사용 중인 아이디입니다.');
-                        return;
+                        throw new Error('duplicate'); // Promise 체인 중단
                     }
 
                     console.log('회원가입 처리 중...');
@@ -162,17 +162,17 @@
                         createdAt: Date.now()
                     });
                 })
-                .then((result) => {
-                    if (result !== undefined) {
-                        console.log('회원가입 완료');
-                        alert('회원가입이 완료되었습니다!\n요금제를 선택하고 입금해주세요.');
-                        // 요금제 페이지로 이동 (이름 전달)
-                        location.href = 'pricing.html?name=' + encodeURIComponent(name);
-                    }
+                .then(() => {
+                    console.log('회원가입 완료');
+                    alert('회원가입이 완료되었습니다!\n요금제를 선택하고 입금해주세요.');
+                    // 요금제 페이지로 이동 (이름 전달)
+                    location.href = 'pricing.html?name=' + encodeURIComponent(name);
                 })
                 .catch((error) => {
-                    console.error('회원가입 오류:', error);
-                    alert('회원가입 중 오류가 발생했습니다: ' + error.message);
+                    if (error.message !== 'duplicate') {
+                        console.error('회원가입 오류:', error);
+                        alert('회원가입 중 오류가 발생했습니다: ' + error.message);
+                    }
                 });
         }
 
