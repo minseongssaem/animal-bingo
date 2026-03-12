@@ -34,6 +34,14 @@
                 </button>
             </div>
 
+            <!-- 관리자 전용 버튼 -->
+            <div id="adminButton" style="display: none;">
+                <button class="btn" onclick="location.href='admin-dashboard.html'" style="background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%); color: white;">
+                    <span>🔐</span>
+                    <span>관리자 대시보드</span>
+                </button>
+            </div>
+
             <button class="btn btn-ghost" onclick="logout()">
                 <span>🚪</span>
                 <span>로그아웃</span>
@@ -41,18 +49,54 @@
         </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
     <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCCuAOnkEmfFEE57D3bgWLU7xR2f0i2psI",
+            authDomain: "animal-bingo-90774.firebaseapp.com",
+            databaseURL: "https://animal-bingo-90774-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "animal-bingo-90774",
+            storageBucket: "animal-bingo-90774.firebasestorage.app",
+            messagingSenderId: "547100283990",
+            appId: "1:547100283990:web:d1206d278a9f46eaf2d7f7",
+            measurementId: "G-E8WLHPJ24E"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
         // 로그인 확인
         const username = sessionStorage.getItem('username');
         const name = sessionStorage.getItem('name');
         const expiryDate = sessionStorage.getItem('expiryDate');
+        const userId = sessionStorage.getItem('userId');
+        const adminLoggedIn = sessionStorage.getItem('adminLoggedIn');
 
-        if (!username) {
+        // 일반 로그인 또는 관리자 로그인 확인
+        if (!username && !adminLoggedIn) {
             alert('로그인이 필요합니다.');
             location.href = 'login.html';
         }
 
-        document.getElementById('userName').textContent = name || username;
+        // 관리자로 로그인한 경우 사용자 정보 표시
+        if (adminLoggedIn === 'true' && !username) {
+            document.getElementById('userName').textContent = '관리자';
+        } else {
+            document.getElementById('userName').textContent = name || username;
+        }
+
+        // 관리자 권한 확인 (Firebase에서 직접 확인)
+        if (userId) {
+            database.ref(`users/${userId}`).once('value', (snapshot) => {
+                const user = snapshot.val();
+                if (user && user.isAdmin === true) {
+                    document.getElementById('adminButton').style.display = 'block';
+                    sessionStorage.setItem('adminLoggedIn', 'true');
+                }
+            });
+        }
 
         // 만료일 표시
         if (expiryDate && expiryDate !== 'unlimited') {

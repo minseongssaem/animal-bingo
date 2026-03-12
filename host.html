@@ -379,6 +379,15 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
+        // 로그인 확인 (일반 로그인 또는 관리자 로그인)
+        const username = sessionStorage.getItem('username');
+        const adminLoggedIn = sessionStorage.getItem('adminLoggedIn');
+        
+        if (!username && adminLoggedIn !== 'true') {
+            alert('로그인이 필요합니다.');
+            location.href = 'login.html';
+        }
+
         const choseongList = ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
         let gameCode = '';
         let currentChoseong = '';
